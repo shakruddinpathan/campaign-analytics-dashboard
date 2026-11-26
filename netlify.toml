@@ -1,0 +1,38 @@
+# Netlify deployment config: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # Run the test suite first so a failing test blocks the deploy,
+  # then type-check and build the production bundle with Vite.
+  command = "npm test && npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 requires Node ^20.19 or >=22.12.
+  NODE_VERSION = "22"
+
+# Single-page app: serve index.html for any path that is not a real file,
+# so refreshing a deep link never returns a 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Vite fingerprints everything in /assets (e.g. index-B34w63L3.js),
+# so those files can be cached forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# index.html must always be revalidated so users get the latest deploy.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
